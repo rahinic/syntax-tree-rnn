@@ -15,12 +15,23 @@ class PennTreebankDictionary():
         tokens, tags, targets = [],[],[]
 
         for sample in input_samples:
+            # tokens
             all_tokens = [item for sublist in sample["2"]["tokens"] for item in sublist]
-            all_tags = sample["2"]["tags"]
-            all_targets =sample["2"]["targets"]
             tokens.append(all_tokens)
-            tags.append(all_tags)
-            targets.append(all_targets)
+
+            #tags and targets
+            all_levels = list(sample.keys()) # find out all possible levels
+            all_tags, all_targets = [], []
+            for level in all_levels:
+                all_tags.append(sample[level]["tags"])
+                all_targets.append(sample[level]["targets"])
+
+            all_tags_flat = list(set([item for sublist in all_tags for item in sublist]))
+            all_targets_flat = list(set([item for sublist in all_targets for item in sublist]))
+            
+            
+            tags.append(all_tags_flat)
+            targets.append(all_targets_flat)
 
         combine_every_sentence_tokens = [item for sublist in tokens for item in sublist]
         combine_every_sentence_tags = [item for sublist in tags for item in sublist]
