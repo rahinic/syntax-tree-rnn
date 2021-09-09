@@ -2,10 +2,10 @@
 
 import json
 import pickle
-from typing import Type
+from typing import Type, Dict
 import torch
 from torch.utils.data import Dataset, DataLoader
-from torch.utils.data.sampler import BatchSampler
+from model import CompositionalNetwork, Tagger
 
 class pennDataset(Dataset):
     
@@ -120,10 +120,6 @@ class pennDataset(Dataset):
             
         return dataset
 #--------------------------------------------------------------
-# test = pennDataset()
-# all_samples = test.file_processor(input_dataset='valid_dataset_transformed.json')
-# # print(len(all_samples))
-# print(all_samples[31])
 
     def __init__(self, currDataset=None):
 
@@ -140,16 +136,5 @@ class pennDataset(Dataset):
         
         return self.all_samples[idx]   
 
-def collate_function(batch):
-    return(batch)
 
-valid_ds = DataLoader(dataset=pennDataset('valid_dataset_transformed.json'), shuffle=False, batch_size=8, collate_fn=collate_function)
-
-
-for idx,ex in enumerate(valid_ds):
-    print(idx)
-    print(ex[2])
-    print('-'*100)
-    if idx>1:
-        break
-
+#####################################################################################################
