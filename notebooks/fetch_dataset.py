@@ -5,6 +5,7 @@ import pickle
 from typing import Type
 import torch
 from torch.utils.data import Dataset, DataLoader
+from torch.utils.data.sampler import BatchSampler
 
 class pennDataset(Dataset):
     
@@ -82,97 +83,73 @@ class pennDataset(Dataset):
 
         dataset = []
         
-        for sample in dataset_samples:
+        for idx,sample in enumerate(dataset_samples):
             max_level = list(sample.keys())[-1]
             # (ii) Create a skeletol dict similar to this example dict of JSON obj
             
             dict_as_numbers = {
                 str(level): {"tokens": list(), "tags": list(), "targets": list()}
                 for level in range(2, int(max_level)+1)
+                # for level in range(2, 29+1)
             }
+            # if int(max_level) > 30:
+            #     continue
 
             for level in sample.items():
 
                 curr_token_list = level[1]['tokens']
                 curr_token_list_as_numbers = sample_to_idx_pipeline(curr_token_list,input_lkp_tbl=token_lkp_tbl)
-                try:
-                    torch.tensor(curr_token_list_as_numbers)
-                except ValueError:
-                    print(curr_token_list_as_numbers)
-                dict_as_numbers[level[0]]['tokens'] = torch.tensor(curr_token_list_as_numbers)
+                dict_as_numbers[level[0]]['tokens'] = curr_token_list_as_numbers
+                # dict_as_numbers[level[0]]['tokens'] = torch.tensor(curr_token_list_as_numbers)
                 
 
                 curr_tag_list = level[1]['tags']
                 curr_tags_list_as_numbers = sample_to_idx_pipeline(curr_tag_list,input_lkp_tbl=tags_lkp_tbl)
                 curr_tags_list_as_numbers_clean = cleaned_list(curr_tags_list_as_numbers)
-                dict_as_numbers[level[0]]['tags'] = torch.tensor(curr_tags_list_as_numbers_clean)
+                dict_as_numbers[level[0]]['tags'] = curr_tags_list_as_numbers_clean
+                # dict_as_numbers[level[0]]['tags'] = torch.tensor(curr_tags_list_as_numbers_clean)
 
                 curr_tgt_list = level[1]['targets']        
                 curr_tgt_list_as_numbers = sample_to_idx_pipeline(curr_tgt_list,input_lkp_tbl=tgt_lkp_tbl)
                 curr_tgt_list_as_numbers_clean = cleaned_list(curr_tgt_list_as_numbers)
-                dict_as_numbers[level[0]]['targets'] = torch.tensor(curr_tgt_list_as_numbers_clean)
+                dict_as_numbers[level[0]]['targets'] = curr_tgt_list_as_numbers_clean
+                # dict_as_numbers[level[0]]['targets'] = torch.tensor(curr_tgt_list_as_numbers_clean)
 
             dataset.append(dict_as_numbers)
         
             
         return dataset
 #--------------------------------------------------------------
-test = pennDataset()
-all_samples = test.file_processor(input_dataset='valid_dataset_transformed.json')
-print(len(all_samples))
-print(all_samples[31])
+# test = pennDataset()
+# all_samples = test.file_processor(input_dataset='valid_dataset_transformed.json')
+# # print(len(all_samples))
+# print(all_samples[31])
 
-#     def __init__(self, currDataset=None):
+    def __init__(self, currDataset=None):
 
-#         self.mydataset = currDataset
-#         self.all_samples = self.file_processor(input_dataset=self.mydataset)
-#         # print(self.all_samples[31])
+        self.mydataset = currDataset
+        self.all_samples = self.file_processor(input_dataset=self.mydataset)
+        # print(self.all_samples[31])
 
-#     def __len__(self):
-#         print(len(self.all_samples))
+    def __len__(self):
+        # print(len(self.all_samples))
 
-#         return len(self.all_samples)
+        return len(self.all_samples)
 
-#     def __getitem__(self, idx) :
-
-#         return self.all_samples[idx]   
-
-# valid_ds = DataLoader(dataset=pennDataset('valid_dataset_transformed.json'), batch_size=8, shuffle=False)
-
-# for 
-        # # (i) Consider one example object from our JSON file
-        # example = dataset_samples[8]
-        # max_level = list(example.keys())[-1]
-        # print(f"One example: {example}")
-        # # print(f"Last level here is : {max_level}")
+    def __getitem__(self, idx) :
         
-        # # (ii) Create a skeletol dict similar to this example dict of JSON obj
+        return self.all_samples[idx]   
 
-        # dict_as_numbers = {
-        #     str(level): {"tokens": list(), "tags": list(), "targets": list()}
-        #     for level in range(2, int(max_level)+1)
-        # }
+def collate_function(batch):
+    return(batch)
 
-        # # (iii) 
-        # for level in example.items():
-
-        #     curr_token_list = level[1]['tokens']
-        #     curr_token_list_as_numbers = sample_to_idx_pipeline(curr_token_list,input_lkp_tbl=token_lkp_tbl)
-        #     dict_as_numbers[level[0]]['tokens'] = curr_token_list_as_numbers
-        #     # print(dict_as_numbers)
-
-        #     curr_tag_list = level[1]['tags']        
-        #     # print(curr_tag_list)
-        #     curr_tags_list_as_numbers = sample_to_idx_pipeline(curr_tag_list,input_lkp_tbl=tags_lkp_tbl)
-        #     print(curr_tags_list_as_numbers)
-        #     dict_as_numbers[level[0]]['tags'] = curr_tags_list_as_numbers
-
-        #     curr_tgt_list = level[1]['targets']        
-        #     curr_tgt_list_as_numbers = sample_to_idx_pipeline(curr_tgt_list,input_lkp_tbl=tgt_lkp_tbl)
-        #     dict_as_numbers[level[0]]['targets'] = curr_tgt_list_as_numbers      
+valid_ds = DataLoader(dataset=pennDataset('valid_dataset_transformed.json'), shuffle=False, batch_size=8, collate_fn=collate_function)
 
 
-        #     print('------') 
-        # print(dict_as_numbers)
+for idx,ex in enumerate(valid_ds):
+    print(idx)
+    print(ex[2])
+    print('-'*100)
+    if idx>1:
+        break
 
-# file_processor('test_dataset_transformed.json')
