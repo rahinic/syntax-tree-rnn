@@ -5,6 +5,7 @@ class CompositionalNetwork(torch.nn.Module):
         self,
         output_dim: int,
         vocab_size: int,
+        tag_size: int,
         word_emd_dim: int = 200,
         tag_emb_dim: int = 20,
         comp_emb_dim: int = 200,
@@ -15,7 +16,8 @@ class CompositionalNetwork(torch.nn.Module):
             num_embeddings=vocab_size, embedding_dim=word_emd_dim
         )
         self.tag_emb_layer = torch.nn.Embedding(
-            num_embeddings=output_dim, embedding_dim=tag_emb_dim
+            # num_embeddings=output_dim, embedding_dim=tag_emb_dim
+            num_embeddings=tag_size, embedding_dim=tag_emb_dim
         )
         self.compositional_layers = {
             k: torch.nn.Linear(

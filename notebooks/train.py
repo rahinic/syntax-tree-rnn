@@ -10,9 +10,9 @@ def collate_function(batch):
     return(batch)
 #-------------------------------------------------------------------
 print("1. Loading Train/Test/Validation datasets...")
-train_ds = DataLoader(dataset=pennDataset('train_dataset_transformed.json'), shuffle=False, batch_size=64, collate_fn=collate_function)
-test_ds = DataLoader(dataset=pennDataset('test_dataset_transformed.json'), shuffle=False, batch_size=64, collate_fn=collate_function)
-valid_ds = DataLoader(dataset=pennDataset('valid_dataset_transformed.json'), shuffle=False, batch_size=64, collate_fn=collate_function)
+train_ds = DataLoader(dataset=pennDataset('train_dataset_transformed.json'), shuffle=False, batch_size=1, collate_fn=collate_function)
+test_ds = DataLoader(dataset=pennDataset('test_dataset_transformed.json'), shuffle=False, batch_size=1, collate_fn=collate_function)
+valid_ds = DataLoader(dataset=pennDataset('valid_dataset_transformed.json'), shuffle=False, batch_size=1, collate_fn=collate_function)
 print("Done! All datasets are loaded!")
 print("-"*100)
 
@@ -82,23 +82,18 @@ def train_loop(
         # samples_in_curr_batch = dict()
         for level in range(2, TREE_DEPTH + 1):
             print(f"Length of batch: {len(batch)} and current level: {level}")
-            print(batch[0][level])
+            # print(batch)
+            print(batch[0][str(level)])
             print('-'*50)
             # for first level, we use POS tags
             # TODO replace tokens with their index -- done already
             if level == 2:
                 input_dict = {
-                    "token_indices": [comp_model.token_to_idx(token) for token in batch[level]["tokens"]],
-                    "tag_indices": [
-                        comp_model.label_to_idx(tag, tag_type="pos")
-                        for tag in batch[level]["tags"]
-                    ],
-                    "tags": batch[level]["tags"],
-                    "target_indices": [
-                        comp_model.label_to_idx(tag, tag_type="constituents")
-                        for tag in batch[level]["targets"]
-                    ],
-                    "level": level,
+                    "token_indices": batch[0]['2']["tokens"],
+                    "tag_indices": batch[0]['2']["tags"],
+                    "tags": batch[0]['2']["tags"], #original tags before idx look-up
+                    "target_indices": batch[0]['2']["targets"],
+                    "level": '2',
                     "use_embedding": True,
                 }
 

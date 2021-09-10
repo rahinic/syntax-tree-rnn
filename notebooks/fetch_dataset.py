@@ -124,17 +124,19 @@ class pennDataset(Dataset):
     def __init__(self, currDataset=None):
 
         self.mydataset = currDataset
-        self.all_samples = self.file_processor(input_dataset=self.mydataset)
+        self.dataset_samples = self.fetch_jsonfile(self.mydataset) # Step 1
+        # self.all_samples = self.file_processor(input_dataset=self.mydataset)
         # print(self.all_samples[31])
 
     def __len__(self):
-        # print(len(self.all_samples))
 
-        return len(self.all_samples)
+        return len(self.dataset_samples)
 
     def __getitem__(self, idx) :
+
+        return self.dataset_samples[idx]
         
-        return self.all_samples[idx]   
+        # return self.all_samples[idx]   
 
 
 #####################################################################################################
