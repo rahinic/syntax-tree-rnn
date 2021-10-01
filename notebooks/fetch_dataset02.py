@@ -129,8 +129,7 @@ def train_loop(
         # for each batch we work through entire tree
         temp_tagger_predictions = dict()
         temp_compositional_output = dict()
-        # print(batch[0][str(2)]["tokens"])
-        # print(batch[0]['2']["tokens"])
+
         for level in range(2, TREE_DEPTH + 1):
             # for first level, we use POS tags
             # TODO replace tokens with their index

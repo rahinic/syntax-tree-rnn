@@ -84,9 +84,11 @@ class CompositionalNetwork(torch.nn.Module):
                     ],
                 ]
             )
+            print(f"Intermediate results:{stacked_embeddings}")
             composed_embeddings.append(
                 self.compositional_layers[chunk_length](stacked_embeddings)
             )
+        # print(composed_embeddings)
         return torch.cat(composed_embeddings, dim=0)
 
 #####################################################################################################
