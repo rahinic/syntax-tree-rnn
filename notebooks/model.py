@@ -66,6 +66,7 @@ class CompositionalNetwork(torch.nn.Module):
         
         """
         chunks = self.identify_chunks(x["tags"], level=x["level"])
+        print(f"Current chunks: {chunks}")
         if x["use_embedding"]:
             token_embeddings = self.word_emb_layer(x["token_indices"])
         else:

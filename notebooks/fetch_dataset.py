@@ -2,10 +2,10 @@
 
 import json
 import pickle
-from typing import Type, Dict
-import torch
-from torch.utils.data import Dataset, DataLoader
-from model import CompositionalNetwork, Tagger
+# from typing import Type, Dict
+# import torch
+from torch.utils.data import Dataset
+# from model import CompositionalNetwork, Tagger
 
 class pennDataset(Dataset):
     
