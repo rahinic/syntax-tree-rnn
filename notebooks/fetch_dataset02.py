@@ -1,15 +1,16 @@
 from fetch_dataset import pennDataset
 from torch.utils.data import DataLoader
-from model import CompositionalNetwork, Tagger
+# from model import CompositionalNetwork, Tagger
+from test_file_model import CompositionalNetwork, Tagger
 import torch
 import pickle
 #----------------------------------------------------------------------------
 print("loading train/test/validation datasets...")
 def collate_function(batch):
     return(batch)
-train_ds = DataLoader(dataset=pennDataset('train_dataset_transformed.json'), shuffle=False, batch_size=1, collate_fn=collate_function)
-test_ds = DataLoader(dataset=pennDataset('test_dataset_transformed.json'), shuffle=False, batch_size=1, collate_fn=collate_function)
-valid_ds = DataLoader(dataset=pennDataset('valid_dataset_transformed.json'), shuffle=False, batch_size=1, collate_fn=collate_function)
+train_ds = DataLoader(dataset=pennDataset('train_dataset_transformed.json'), shuffle=True, batch_size=1, collate_fn=collate_function)
+test_ds = DataLoader(dataset=pennDataset('test_dataset_transformed.json'), shuffle=True, batch_size=1, collate_fn=collate_function)
+valid_ds = DataLoader(dataset=pennDataset('valid_dataset_transformed.json'), shuffle=True, batch_size=1, collate_fn=collate_function)
 print("done")
 #----------------------------------------------------------------------------
 print("loading the 3 look-up tables...")
@@ -39,7 +40,7 @@ print("-"*100)
 # Step 3: Define Hyperparameters:
 print("3. Loading hyperparameters...")
 OUTPUT_DIM = 10
-COMP_EMB_DIM = 20
+COMP_EMB_DIM = 200 #20
 WORD_EMB_DIM = 20
 TAG_EMB_DIM = 5
 VOCAB_SIZE = len(tokens_lkp)+1
@@ -104,8 +105,7 @@ print("done.!")
 #-----------------------------------------------------------------------------
 # Step 4: Initialize Neural Network models
 print("4 Building NN models...")
-compositional_model = CompositionalNetwork(output_dim=OUTPUT_DIM
-                                    , vocab_size=VOCAB_SIZE
+compositional_model = CompositionalNetwork(vocab_size=VOCAB_SIZE
                                     , tag_size= TAG_SIZE)
 tagger_model = Tagger(output_dim=OUTPUT_DIM
                     , comp_emb_dim=COMP_EMB_DIM)
@@ -126,6 +126,7 @@ def train_loop(
     # iterate through the dataset
     # each batch is a nested dict
     for batch in train_dataset:
+
         # for each batch we work through entire tree
         temp_tagger_predictions = dict()
         temp_compositional_output = dict()
@@ -135,19 +136,10 @@ def train_loop(
             # TODO replace tokens with their index
             if level == 2:
                 input_dict = {
-                    # "token_indices": [token_to_idx(token) for token in batch[0][str(level)]["tokens"]],
-                    
-                    # "tag_indices": [
-                    #     label_to_idx(tag, tag_type="pos")
-                    #     for tag in batch[0][str(level)]["tags"]
-                    # ],
-                    # "target_indices": [
-                    #     label_to_idx(tag, tag_type="constituents")
-                    #     for tag in batch[0][str(level)]["targets"]
-                    # ],
                     "token_indices": sample_to_idx_pipeline(batch[0][str(level)]["tokens"],tokens_lkp),
                     "tag_indices": sample_to_idx_pipeline(batch[0][str(level)]["tags"], tags_lkp),
-                    "tags": batch[0][str(level)]["tags"],
+                    # "tags": batch[0][str(level)]["tags"],
+                    "targets": batch[0][str(level)]["targets"],
                     "target_indices": sample_to_idx_pipeline(batch[0][str(level)]["targets"], targets_lkp),
                     "level": str(level),
                     "use_embedding": True,
@@ -171,7 +163,12 @@ def train_loop(
                 }
             
             composed_output = comp_model(input_dict)
-            tagger_output = torch.nn.LogSoftmax(tagger_model(composed_output))
+            
+            tagger_output = torch.nn.functional.log_softmax(tagger_model(composed_output.unsqueeze(dim=1)),dim=2)
+            print(torch.exp(tagger_output.sum(1)))
+            print(torch.exp(tagger_output).size())
+            # print(torch.exp(tagger_output).argmax(dim=0).tolist()[0])
+            print(input_dict)
             # TODO do inverse lookup for predictions to get text label from their indices, before storing them in temp_tagger_predictions
             optimizer.zero_grad()
             loss = loss_fn(tagger_output, torch.tensor(batch[level]["target_indices"]))

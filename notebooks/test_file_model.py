@@ -11,7 +11,7 @@ class Tagger(torch.nn.Module):
         self.recurrent_layer = torch.nn.LSTM(
             input_size=comp_emb_dim, hidden_size=rnn_dim, batch_first=True
         )
-        #layer 2: linear -- should this be a non-linear layer like Denis mentioned?!
+        #layer 2: linear -- should this be a non-linear layer?
         self.output_layer = torch.nn.Linear(
             in_features=rnn_dim, out_features=output_dim
         )
@@ -46,7 +46,7 @@ class CompositionalNetwork(torch.nn.Module):
         self.tag_emb_layer = torch.nn.Embedding(num_embeddings=tag_size, embedding_dim=tag_emb_dim)
         #layer 2: compositional layer: h(M_pow(k)*z)
         self.compositional_layers = {
-            k: torch.nn.Linear(in_features=(word_emb_dim+tag_emb_dim) * k,
+            k: torch.nn.Linear(in_features=(word_emb_dim+tag_emb_dim), #*k - removed this for now
                                 out_features=comp_emb_dim)
             for k in range(1, n_comp_layers + 1) # total levels + 1 (root)
         }
@@ -58,18 +58,13 @@ class CompositionalNetwork(torch.nn.Module):
         identify chunks using BIOES tags. Return a list of <chunk index, length> tuples
         """
         print('-'*50)
-        print("Inside _identify_chunk_ function:")
-        print(tags)
-        print(level)
-        
+                
         # if level == 1, then each token is a standalone chunk
         if level == 1:
             return [(i, 1) for i in range(len(tags))]
         chunks = list()
         current_chunk = {"start_index": -1, "length": 0}
-        print(f"2. current chunk is {current_chunk}")
-        print(f"Starting the sub-process. targets list: {tags}")
-        print('-'*50)
+        
         for i, tag in enumerate(tags):
             if tag == "O" or tag.split("-")[0] == "S":
                 if current_chunk["start_index"] != -1:
@@ -88,7 +83,6 @@ class CompositionalNetwork(torch.nn.Module):
                         (current_chunk["start_index"], current_chunk["length"] + 1)
                     )
                     current_chunk = {"start_index": -1, "length": 0}
-                    print(f"2.b) chunks when the tag is E: {current_chunk}")
                 elif tag.split("-")[0] == "B":
                     
                     current_chunk = {"start_index": i, "length": 1}
@@ -109,7 +103,6 @@ class CompositionalNetwork(torch.nn.Module):
         # chunks = self.identify_chunks(x["tags"], level=x["level"]) 
         chunks = self.identify_chunks(x["targets"], level=x["level"]) 
         
-        print(f"Current chunks: {chunks}")
         if x["use_embedding"]:
             token_embeddings = self.word_emb_layer(x["token_indices"])
         else:
@@ -130,7 +123,10 @@ class CompositionalNetwork(torch.nn.Module):
                     ],
                 ]
             )
-            print(f"Intermediate results:{stacked_embeddings}")
+            # print(self.compositional_layers)
+            # print(f"chunk length: {chunk_length}")
+            # print(f"stacked embedding dimension: {stacked_embeddings.size()}")
+
             composed_embeddings.append(
                 self.compositional_layers[chunk_length](stacked_embeddings)
             )
