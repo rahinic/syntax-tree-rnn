@@ -39,7 +39,7 @@ print("-"*100)
 #---------------------------------------------------------------------------
 # Step 3: Define Hyperparameters:
 print("3. Loading hyperparameters...")
-OUTPUT_DIM = 10
+OUTPUT_DIM = len(targets_lkp)# 10
 COMP_EMB_DIM = 200 #20
 WORD_EMB_DIM = 20
 TAG_EMB_DIM = 5
@@ -133,7 +133,7 @@ def train_loop(
 
         for level in range(2, TREE_DEPTH + 1):
             # for first level, we use POS tags
-            # TODO replace tokens with their index
+            # TODO replace tokens with their index --done
             if level == 2:
                 input_dict = {
                     "token_indices": sample_to_idx_pipeline(batch[0][str(level)]["tokens"],tokens_lkp),
@@ -164,11 +164,21 @@ def train_loop(
             
             composed_output = comp_model(input_dict)
             
-            tagger_output = torch.nn.functional.log_softmax(tagger_model(composed_output.unsqueeze(dim=1)),dim=2)
-            print(torch.exp(tagger_output.sum(1)))
-            print(torch.exp(tagger_output).size())
+            tagger_output_raw = torch.nn.functional.log_softmax(tagger_model(composed_output.unsqueeze(dim=1)),dim=2)
+            tagger_output = torch.exp(tagger_output_raw).argmax(dim=2).tolist()
+            pred_tagger_output = [item for sublist in tagger_output for item in sublist]
+            actual_output = input_dict["target_indices"].tolist()
+
+            print(f"Predicted tagger output:\n{pred_tagger_output}")
+            print(f"Actual tagger output:\n{actual_output}")
+            # print(torch.exp(tagger_output_raw).size())
+            # print(torch.exp(torch.exp(tagger_output_raw).argmax(dim=2)).size())
+            # print(torch.exp(actual_output).size())
+            
             # print(torch.exp(tagger_output).argmax(dim=0).tolist()[0])
-            print(input_dict)
+            # print(input_dict)
+            pred_tagger_output = [item for sublist in tagger_output for item in sublist]
+
             # TODO do inverse lookup for predictions to get text label from their indices, before storing them in temp_tagger_predictions
             optimizer.zero_grad()
             loss = loss_fn(tagger_output, torch.tensor(batch[level]["target_indices"]))
