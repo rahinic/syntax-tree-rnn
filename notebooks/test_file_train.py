@@ -36,7 +36,8 @@ def load_lkp_tables():
 
         return tokens_lkp, tags_lkp, targets_lkp, tokens_lkp_rev
 tokens_lkp, tags_lkp, targets_lkp, tokens_lkp_rev = load_lkp_tables()
-print("done!")
+print(f"Size of look-up tables:\n(a)Tokens:{len(tokens_lkp)}\n(b)Tags:{len(tags_lkp)}\n(c)Targets:{len(targets_lkp)}")
+# print("done!")
 print("-"*100)   
 ###############################################################################
 # Step 3: Define Hyperparameters:
